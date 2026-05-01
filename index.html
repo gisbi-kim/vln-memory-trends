@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3세대 VLN/Embodied 메모리 동향 분석</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --text:        #1a1a1a;
+    --text-muted:  #5a5a5a;
+    --text-faint:  #8a8a8a;
+    --bg:          #fdfcfa;
+    --bg-alt:      #f5f3ee;
+    --border:      #d8d4cb;
+    --border-soft: #e8e5dd;
+    --accent:      #7a3b1f;
+    --accent-soft: #c89978;
+    --link:        #5a3010;
+    --serif: 'Source Serif 4', 'Charter', 'Iowan Old Style', 'Georgia', 'Noto Serif KR', serif;
+    --sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Noto Sans KR', sans-serif;
+    --mono:  'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { font-size: 17px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  body {
+    font-family: var(--serif);
+    font-weight: 400;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.65;
+    margin: 0;
+    padding: 0;
+    font-feature-settings: "kern" 1, "liga" 1, "onum" 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 80px 32px 120px;
+  }
+
+  /* === Header === */
+  header.masthead {
+    margin-bottom: 56px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  h1.title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 2.35rem;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    margin: 0 0 18px;
+    color: var(--text);
+  }
+
+  .subtitle {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* === Section Headings === */
+  h2 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.55rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    margin: 64px 0 20px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 10px;
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 1.18rem;
+    line-height: 1.35;
+    margin: 40px 0 14px;
+    color: var(--text);
+  }
+
+  h4 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+    margin: 28px 0 10px;
+    color: var(--accent);
+  }
+
+  /* === Body text === */
+  p {
+    margin: 0 0 1.1em;
+    text-align: justify;
+    text-justify: inter-character;
+    hyphens: auto;
+    word-break: keep-all;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-soft);
+    transition: border-color .15s, background .15s;
+  }
+  a:hover {
+    background: rgba(200, 153, 120, 0.12);
+    border-bottom-color: var(--accent);
+  }
+
+  strong {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  /* === Lists === */
+  ul, ol {
+    padding-left: 1.4em;
+    margin: 0 0 1.1em;
+  }
+
+  li {
+    margin-bottom: 0.4em;
+    line-height: 1.6;
+  }
+
+  ul ul, ol ol, ul ol, ol ul {
+    margin: 0.4em 0;
+  }
+
+  /* === Blockquote === */
+  blockquote {
+    margin: 1.4em 0;
+    padding: 4px 0 4px 22px;
+    border-left: 3px solid var(--accent-soft);
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 1.02rem;
+    line-height: 1.55;
+  }
+
+  blockquote p { margin: 0; text-align: left; }
+
+  /* === Tables === */
+  .table-wrap {
+    margin: 1.6em 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  thead tr {
+    border-top: 1.5px solid var(--text);
+    border-bottom: 1px solid var(--text);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  tbody tr:last-child {
+    border-bottom: 1.5px solid var(--text);
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 12px;
+    vertical-align: top;
+  }
+
+  th {
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    letter-spacing: 0.01em;
+  }
+
+  td {
+    color: var(--text);
+  }
+
+  td strong { color: var(--accent); }
+
+  /* === Code === */
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--bg-alt);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  pre {
+    background: var(--bg-alt);
+    padding: 16px 20px;
+    overflow-x: auto;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    margin: 1.4em 0;
+    border: 1px solid var(--border-soft);
+  }
+
+  pre code {
+    background: transparent;
+    padding: 0;
+  }
+
+  /* === HR / Section divider === */
+  hr {
+    border: none;
+    text-align: center;
+    margin: 56px 0 36px;
+    height: 1em;
+    line-height: 1em;
+  }
+  hr::before {
+    content: "* * *";
+    color: var(--text-faint);
+    letter-spacing: 0.6em;
+    font-size: 0.85rem;
+  }
+
+  /* === References === */
+  .references {
+    margin-top: 32px;
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .references h2 {
+    font-style: normal;
+    font-size: 1.15rem;
+    border: none;
+    padding: 0;
+    margin: 0 0 16px;
+    color: var(--text);
+  }
+  .references ul {
+    list-style: none;
+    padding: 0;
+  }
+  .references li {
+    margin-bottom: 0.7em;
+    padding-left: 1.2em;
+    text-indent: -1.2em;
+    line-height: 1.5;
+  }
+
+  /* === Drop cap on first paragraph of section 1 === */
+  #intro-first::first-letter {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 3.4em;
+    float: left;
+    line-height: 0.9;
+    margin: 0.05em 0.08em 0 0;
+    color: var(--accent);
+  }
+
+  /* === Responsive === */
+  @media (max-width: 640px) {
+    html { font-size: 16px; }
+    .page { padding: 48px 20px 80px; }
+    h1.title { font-size: 1.85rem; }
+    h2 { font-size: 1.35rem; }
+    h3 { font-size: 1.08rem; }
+    th, td { padding: 8px 9px; font-size: 0.82rem; }
+    p { text-align: left; hyphens: none; }
+  }
+
+  /* === Print === */
+  @media print {
+    body { background: white; color: black; }
+    .page { max-width: none; padding: 0; }
+    a { color: black; border: none; }
+    h2, h3 { page-break-after: avoid; }
+    table, blockquote, pre { page-break-inside: avoid; }
+  }
+
+  /* === Selection === */
+  ::selection {
+    background: rgba(200, 153, 120, 0.35);
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div class="eyebrow">Survey · Embodied AI Memory</div>
+  <h1 class="title">3세대 VLN/Embodied 메모리 동향 분석</h1>
+  <p class="subtitle">2026년 4월 기준, 최근 arXiv 논문 5편을 중심으로</p>
+</header>
+
+<section>
+<h2>1. 큰 그림: VLN 메모리 연구의 세대 구분</h2>
+
+<p id="intro-first">VLN/Embodied 에이전트의 메모리 연구는 지난 3년간 명확히 세대가 갈렸다.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>세대</th><th>시기</th><th>핵심 질문</th><th>대표 키워드</th></tr>
+</thead>
+<tbody>
+<tr><td>1세대</td><td>2023~2024</td><td><strong>어떻게 표현할까</strong></td><td>voxel grid, scene graph, NeRF/3DGS, persistent node</td></tr>
+<tr><td>2세대</td><td>2025</td><td><strong>어떻게 LLM/VLM과 붙일까</strong></td><td>text summarization memory, frontier-based exploration, MLLM-as-brain</td></tr>
+<tr><td>3세대</td><td><strong>2026~</strong></td><td><strong>어떻게 운영할까</strong></td><td>분리, 반성, 망각, 가중치 적응, reranking</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>3세대의 공통 메시지를 한 줄로 요약하면 다음과 같다.</p>
+
+<blockquote>
+<p>메모리를 "어떻게 쌓을지"의 시대는 끝났고, "무엇을 기억하고 / 잊고 / 꺼낼지의 정책"이 새로운 전장이다.</p>
+</blockquote>
+
+<p>표현 자체는 거의 "주어진 것"으로 두고, 그 위에서 무엇을 어떻게 다룰지가 경쟁 포인트가 됐다.</p>
+</section>
+
+<section>
+<h2>1.5. 연대기로 톺아보기: ChatGPT에서 ReMEmbR, 그리고 5편으로</h2>
+
+<p>세대 구분만으로는 왜 지금 이 흐름이 왔는지 잘 안 와닿는다. 5편이 등장한 맥락을 시간 순으로 짚어보자.</p>
+
+<h3>2022년 11월 — ChatGPT가 모든 것을 흔들다</h3>
+
+<p>ChatGPT 출시 이전 로봇 메모리 연구의 중심은 <strong>metric/semantic map</strong>이었다. SLAM 커뮤니티가 수십 년간 다듬어온 점유 격자, 토폴로지 맵, 그리고 그 위에 객체 라벨을 붙인 semantic map이 표준이었다. 메모리는 곧 "지도"였고, 질의는 곧 "어디에 무엇이 있는가"였다.</p>
+
+<p>ChatGPT가 등장하면서 두 가지가 바뀌었다.</p>
+
+<p>첫째, <strong>자연어로 물을 수 있다는 기대치</strong>가 생겼다. 사용자는 더 이상 "좌표 (3.2, 5.7)에 무엇이 있나"가 아니라 "어제 부엌에서 뭘 봤어?"를 묻기 시작했다. 둘째, <strong>LLM을 reasoning 엔진으로 쓰면 어떨까</strong>라는 질문이 모든 분야에 동시 발생했다. 로보틱스도 예외가 아니었다.</p>
+
+<h3>2023년 — VLM/MLLM의 폭발과 1세대 메모리</h3>
+
+<p>CLIP(2021)이 닦아둔 visual-language alignment 위에, 2023년 GPT-4V, LLaVA, Qwen-VL 같은 multimodal LLM이 쏟아진다. 동시에 <strong>VLN(Vision-and-Language Navigation)</strong> 분야가 단순 instruction-following에서 벗어나 long-horizon 환경으로 확장되기 시작한다.</p>
+
+<p>이 시기의 메모리 연구는 <strong>"어떻게 표현할까"</strong>가 핵심이었다. NeRF/3DGS의 부상과 맞물려 ConceptGraphs, OctoMap-LLM, 3D scene graph 등 <strong>공간 표현의 새 후보</strong>들이 경쟁했다. 메모리는 여전히 "지도"였지만, 그 지도에 LLM이 읽을 수 있는 메타데이터를 어떻게 붙일지가 관건이었다.</p>
+
+<h3>2024년 — Long-horizon 문제의 자각</h3>
+
+<p>문제가 드러나기 시작한 건 2024년이다. 로봇이 5분이 아니라 <strong>수 시간, 수일</strong> 단위로 운영되기 시작하면서, 기존 메모리 표현의 한계가 명확해졌다.</p>
+
+<ul>
+<li>Transformer 기반 short-term 메모리는 1~2분이 한계</li>
+<li>Scene graph는 시간 축을 다루기 어려움</li>
+<li>LLM의 context window는 늘어나도 비용이 폭증</li>
+</ul>
+
+<p>이 시점에 <strong>NVIDIA + USC + UT Austin이 ReMEmbR를 발표한다 (arXiv 2024.09, ICRA 2025 채택)</strong>. 제목이 모든 걸 말한다. <strong>"Retrieval-augmented Memory for Embodied Robots"</strong>. 핵심 아이디어는 단순하다.</p>
+
+<blockquote>
+<p>로봇 경험을 비디오 QA 문제로 재정의하고, RAG로 풀자.</p>
+</blockquote>
+
+<p>ReMEmbR는 두 단계로 나뉜다. <strong>Memory-building</strong>에서 비디오를 3초 단위로 자르고 캡션 생성 후 임베딩으로 저장. <strong>Querying</strong>에서 text/position/time 세 종류의 retrieval로 관련 메모리만 꺼내 LLM이 답한다. NaVQA 데이터셋도 함께 공개해서 spatial/temporal/descriptive 질문에 대한 평가 표준을 제시했다.</p>
+
+<p>ReMEmbR가 중요한 이유는 단순한 성능 개선이 아니라 <strong>프레이밍 전환</strong> 때문이다. 그전까지 로봇 메모리는 "지도를 어떻게 그릴까"였는데, ReMEmbR는 <strong>"기억을 어떻게 검색할까"</strong>로 질문 자체를 바꿔버렸다. RAG 패러다임이 NLP에서 로보틱스로 본격 이식된 분기점이다.</p>
+
+<h3>2025년 — 2세대의 본격화</h3>
+
+<p>ReMEmbR 이후 1년간 비슷한 결의 작업이 쏟아진다. RAG 기반 메모리, MLLM-as-brain 구조, frontier exploration과 LLM의 결합 등. 표현(1세대)은 거의 commodity가 되고, <strong>LLM/VLM과의 결합 방식</strong>이 경쟁 영역이 된다. 이 시기를 2세대로 부를 수 있다.</p>
+
+<p>다만 2세대도 곧 한계를 드러낸다.</p>
+
+<ul>
+<li>Retrieval은 되는데 <strong>부정확한 후보</strong>가 너무 많이 섞여 나옴</li>
+<li>메모리는 계속 쌓이는데 <strong>언제 무엇을 버려야</strong> 할지 모름</li>
+<li>같은 환경을 반복 방문하면서도 <strong>이전 경험을 활용 못함</strong></li>
+<li>환경이 바뀌면(주야간, 신 변화) <strong>catastrophic forgetting</strong> 발생</li>
+</ul>
+
+<p>문제는 명확해졌고, 답이 필요했다.</p>
+
+<h3>2026년 — 5편이 동시다발적으로 답하다</h3>
+
+<p>그 답이 2026년 1분기에 집중적으로 등장한 5편이다.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>시점</th><th>논문</th><th>핵심 답변</th></tr>
+</thead>
+<tbody>
+<tr><td>2026.02</td><td><strong>HIMM</strong></td><td>메모리를 episodic / semantic으로 분리하라</td></tr>
+<tr><td>2026.03</td><td><strong>RAGNav</strong></td><td>Retrieval에 spatial 구조를 넣어라</td></tr>
+<tr><td>2026.03</td><td><strong>TuKA</strong></td><td>가중치를 Tucker로 분해해 환경별로 적응하라</td></tr>
+<tr><td>2026.04</td><td><strong>MetaNav</strong></td><td>메타인지로 자기 전략을 점검하라</td></tr>
+<tr><td>2026.04</td><td><strong>H-EMV</strong></td><td>사용자에 맞춰 선택적으로 잊어라</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>5편이 우연히 같은 시기에 나온 게 아니다. <strong>2세대가 남긴 4가지 한계</strong>(retrieval 정밀도, 망각, lifelong 적응, 메타인지)에 각각 답하고 있다. 표현은 더 이상 논쟁거리가 아니다. 표현 위에서 어떻게 <strong>운영</strong>할지가 모두의 관심사가 됐다.</p>
+
+<p>이 5편이 보여주는 패러다임 전환을 본격적으로 분해하는 것이 다음 장의 목표다.</p>
+</section>
+
+<section>
+<h2>2. 3세대를 구성하는 4가지 축</h2>
+
+<p>3세대 연구는 크게 4가지 축으로 묶인다.</p>
+
+<h3>축 A: 메모리의 종류 분리</h3>
+
+<p>하나의 통합 메모리는 한계가 있다는 진단이 공유되고 있다. 추상화 수준이 다른 메모리는 분리해서 관리해야 한다는 흐름.</p>
+
+<h4>HIMM (Tsinghua, arXiv:2602.15513)</h4>
+<ul>
+<li>MLLM 기반 embodied agent에서 episodic memory와 semantic memory를 명시적으로 분리</li>
+<li>Episodic = 과거 관측을 semantic similarity로 recall 후 exploration map 위에서 visual reasoning으로 verify (geometric alignment 강제 안 함, 환경 변화에 강건)</li>
+<li>Semantic = program-style rule extraction으로 경험을 재사용 가능한 규칙으로 변환 (cross-environment generalization)</li>
+<li>A-EQA에서 LLM-Match 7.3% 향상, GOAT-Bench SR 7.7% 향상</li>
+<li>인지과학(Tulving의 episodic/semantic 구분)에서 출발</li>
+</ul>
+
+<h4>RAGNav (서남재경대, arXiv:2603.03745)</h4>
+<ul>
+<li>Multi-Goal VLN을 위한 Dual-Basis Memory: low-level topological map + high-level semantic forest</li>
+<li>Anchor-guided conditional retrieval + topological neighbor score propagation</li>
+<li>일반적 RAG paradigm의 spatial hallucination과 planning drift 문제를 정조준</li>
+<li>RAG 시스템의 spatial 약점에서 출발</li>
+</ul>
+
+<p>두 논문은 출발점이 다르지만 결론은 같다. 하나의 평면적 메모리로는 부족하다.</p>
+
+<h3>축 B: 메모리 위에서의 메타인지 / 리트리벌 정책</h3>
+
+<p>메모리를 어떻게 운영할지, 언제 전략을 바꿀지의 문제.</p>
+
+<h4>Stop Wandering / MetaNav (중남대, arXiv:2604.02318)</h4>
+<ul>
+<li>Training-free VLN agent의 고질병인 local oscillation, redundant revisiting을 "메타인지 부재" 문제로 재정의</li>
+<li>세 컴포넌트: spatial memory (영구 3D semantic map) + history-aware planning (revisit penalty) + reflective correction (stagnation 감지 시 LLM이 corrective rule 생성)</li>
+<li>Reasoning 과정에서 "지금 잘 가고 있나"를 스스로 점검하는 능력에 초점</li>
+</ul>
+
+<h4>RAGNav (재등장)</h4>
+<ul>
+<li>위의 축 A와 겹치지만, retrieval 단계에서의 정밀도 문제도 다룸</li>
+<li>Anchor-guided conditional retrieval은 "무엇을 꺼낼지"의 정책</li>
+</ul>
+
+<p>이 축은 메모리의 내용보다 <strong>메모리를 다루는 컨트롤러</strong>에 집중한다.</p>
+
+<h3>축 C: 잊기와 평생배포</h3>
+
+<p>메모리를 무한정 쌓을 수 없다, 무엇을 버릴지가 핵심이라는 문제의식.</p>
+
+<h4>Learning to Forget / H-EMV (KIT/ARMAR, arXiv:2604.11306)</h4>
+<ul>
+<li>Hierarchical EM의 incremental 구축 + LM 기반 relevance estimation을 통한 selective forgetting</li>
+<li>자연어 rule conditioning, 사용자 피드백으로 rule 업데이트</li>
+<li>ARMAR-7 실로봇 20.5시간 실환경 평가 + simulated household</li>
+<li>QA 정확도 유지하면서 메모리 45% 감소, query-time compute 35% 감소</li>
+<li>2-round queries에서 정확도 70% 향상 (user priority에 적응)</li>
+<li>핵심은 <strong>personalization</strong> — 환경이 아니라 사용자에 적응하는 lifelong</li>
+</ul>
+
+<h4>TuKA / All-day Multi-scenes Lifelong VLN (CAS Shenyang, arXiv:2603.14276, ICLR 2026)</h4>
+<ul>
+<li>AML-VLN(All-day Multi-scenes Lifelong VLN) 문제 정의 — low-light, overexposure, scattering 등 day/night 환경</li>
+<li>LoRA의 2D 한계 지적 → Tucker 분해 기반 고차 텐서 어댑터</li>
+<li>Multi-hierarchical task knowledge를 shared subspace + scenario-specific experts로 분리</li>
+<li>핵심은 <strong>environment generalization</strong> — 사용자가 아니라 환경에 적응하는 lifelong</li>
+</ul>
+
+<p>이 축의 흥미로운 지점: 두 논문에서 "forgetting"이 정반대 의미로 쓰인다.</p>
+<ul>
+<li>TuKA: forgetting은 <strong>막아야 할 것</strong> (catastrophic forgetting)</li>
+<li>H-EMV: forgetting은 <strong>활용해야 할 도구</strong> (selective forgetting)</li>
+</ul>
+
+<p>같은 lifelong 문제를 데이터/메모리 측(H-EMV) vs 가중치 측(TuKA)에서 푸는 쌍둥이.</p>
+
+<h3>축 D: Retrieve의 정밀도 (떠오르는 4번째 축)</h3>
+
+<p>축 A~C가 본격 부상한 반면, 4번째 축으로 <strong>retrieved 후보의 정밀도</strong> 문제가 떠오르고 있다. RAGNav가 일부 다루지만 대부분의 작업이 아직 retrieve 자체에 머물러 있고, <strong>reranking</strong>을 본격적으로 다룬 사례는 드물다.</p>
+</section>
+
+<section>
+<h2>3. 4분면 요약</h2>
+
+<p>3세대 작업들을 두 축(데이터-가중치 / Storage-time-Query-time)으로 펼치면 다음과 같이 정리된다.</p>
+
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th></th><th>Storage-time</th><th>Query-time</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Data / Memory</strong></td><td>H-EMV (forget rules), HIMM (rule 추출)</td><td>RAGNav (retrieval), MetaNav (reflection)</td></tr>
+<tr><td><strong>Weights</strong></td><td>TuKA (Tucker adapter)</td><td>(사례 적음)</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>가중치 측 query-time 적응(예: test-time training 기반 메모리)은 아직 덜 탐색된 영역.</p>
+</section>
+
+<section>
+<h2>4. 관통하는 5가지 트렌드</h2>
+
+<p>5편을 가로질러 보면 다음 패턴이 반복된다.</p>
+
+<p><strong>(1) 인지과학 메타포의 정착</strong><br>
+Episodic/semantic 분리(HIMM), 메타인지(MetaNav), 망각(H-EMV) 모두 인간 기억 시스템의 명시적 차용. 단순 비유가 아니라 <strong>시스템 설계의 직접 가이드</strong>로 작동.</p>
+
+<p><strong>(2) LM/LLM이 controller로</strong><br>
+HIMM의 rule extraction, MetaNav의 reflective correction, H-EMV의 relevance estimation 모두 LM을 메모리 조작의 의사결정자로 사용. 메모리 자체가 아니라 <strong>메모리에 대한 정책</strong>을 LM이 만든다.</p>
+
+<p><strong>(3) Spatial structure를 버리지 않음</strong><br>
+Foundation model 시대에도 RAGNav의 topological map, MetaNav의 3D semantic map, HIMM의 exploration map 모두 명시적 spatial 표현 유지. <strong>순수 텍스트화 메모리는 한계</strong>가 명확.</p>
+
+<p><strong>(4) Real-world 평가 비중 증가</strong><br>
+H-EMV의 ARMAR-7 20.5시간 기록, TuKA의 multi-scene 평가 등. 시뮬레이션-only 평가의 설득력이 빠르게 줄고 있음.</p>
+
+<p><strong>(5) Personalization과 generalization의 분기</strong><br>
+H-EMV는 user-specific, TuKA는 environment-general. 둘 다 lifelong이지만 적응 대상이 정반대. 이 분기는 향후 더 명확해질 것으로 보임.</p>
+</section>
+
+<section>
+<h2>5. 빈 자리</h2>
+
+<p>3세대에서 아직 덜 채워진 영역:</p>
+
+<ul>
+<li><strong>Query-time weight adaptation</strong>: 테스트 시점에 메모리에 따라 동적으로 가중치를 조정하는 작업</li>
+<li><strong>Memory lifecycle 통합</strong>: storage(forget) + query(retrieve/rerank)를 하나의 통합 framework에서 다루는 시도가 거의 없음</li>
+<li><strong>Multi-robot shared memory</strong>: 5편 모두 single-agent 가정. 협력 환경에서의 메모리 공유/충돌은 미개척</li>
+<li><strong>Memory의 unlearning과 privacy</strong>: H-EMV가 forgetting을 다루지만 user privacy 관점은 빠져 있음</li>
+</ul>
+</section>
+
+<section>
+<h2>6. 정리</h2>
+
+<p>VLN/Embodied 메모리 연구는 2026년을 기점으로 명확히 <strong>운영의 시대</strong>에 진입했다. 표현(1세대)과 LLM 결합(2세대)을 거쳐, 이제는 메모리를 <strong>분리하고, 반성하고, 잊고, 적응시키는</strong> 정책이 핵심 경쟁 영역이다.</p>
+
+<p>5편의 논문은 각각 다른 축에 위치하지만, 공통적으로 메모리를 <strong>수동적 저장소</strong>가 아닌 <strong>능동적으로 관리되는 자원</strong>으로 본다. 이 패러다임 전환이 3세대의 본질이다.</p>
+</section>
+
+<hr>
+
+<section class="references">
+<h2>References</h2>
+<ul>
+<li>ReMEmbR: Building and Reasoning Over Long-Horizon Spatio-Temporal Memory for Robot Navigation (arXiv:2409.13682, ICRA 2025) — 2세대의 분기점</li>
+<li>HIMM: Improving MLLMs in Embodied Exploration and Question Answering with Human-Inspired Memory Modeling (arXiv:2602.15513)</li>
+<li>RAGNav: A Retrieval-Augmented Topological Reasoning Framework for Multi-Goal Visual-Language Navigation (arXiv:2603.03745)</li>
+<li>Stop Wandering / MetaNav: Efficient Vision-Language Navigation via Metacognitive Reasoning (arXiv:2604.02318)</li>
+<li>Learning to Forget / H-EMV: Hierarchical Episodic Memory for Lifelong Robot Deployment (arXiv:2604.11306)</li>
+<li>TuKA: All-day Multi-scenes Lifelong Vision-and-Language Navigation with Tucker Adaptation (arXiv:2603.14276, ICLR 2026)</li>
+</ul>
+</section>
+
+</div>
+</body>
+</html>
